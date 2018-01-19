@@ -26,10 +26,10 @@ enum Event {
 }
 
 const SETTINGS: serial::PortSettings = serial::PortSettings {
-    baud_rate:    serial::Baud9600,
-    char_size:    serial::Bits8,
-    parity:       serial::ParityNone,
-    stop_bits:    serial::Stop1,
+    baud_rate: serial::Baud9600,
+    char_size: serial::Bits8,
+    parity: serial::ParityNone,
+    stop_bits: serial::Stop1,
     flow_control: serial::FlowNone,
 };
 
@@ -66,11 +66,11 @@ fn main() {
         thread::sleep(time::Duration::from_millis(1000));
         port.configure(&SETTINGS)
             .expect("Unable to configure serial port");
-        port.set_timeout(time::Duration::from_millis(50))
+        port.set_timeout(time::Duration::from_millis(200))
             .expect("Unable to configure serial port");
         let mut serial_buffer = Vec::new();
         loop {
-            match thread_rx.recv_timeout(time::Duration::from_millis(50)) {
+            match thread_rx.recv_timeout(time::Duration::from_millis(100)) {
                 Ok(Event::Msg(mess)) => {
                     serial_buffer = mess.clone().into_bytes();
                     serial_buffer.shrink_to_fit();
@@ -83,7 +83,6 @@ fn main() {
             serial_buffer.reserve(200);
             match port.read(&mut serial_buffer[..]) {
                 Ok(_) => {
-                    serial_buffer.shrink_to_fit();
                     recv_data_event
                         .send(Event::Msg(
                             String::from_utf8(serial_buffer.clone()).unwrap(),
@@ -150,8 +149,8 @@ fn main() {
                 event::Key::Ctrl(the_char) => match the_char {
                     'l' => {
                         serial_output = "".to_string();
-                    },
-                    _ => ()
+                    }
+                    _ => (),
                 },
                 _ => break,
             },
@@ -174,6 +173,7 @@ fn main() {
                 input_with_cursor.insert(cursor_position, n);
             }
         }
+        terminal.clear().unwrap();
         draw(
             &mut terminal,
             &term_size,
@@ -186,19 +186,18 @@ fn main() {
 }
 
 fn draw(t: &mut Terminal<MouseBackend>, size: &Rect, user_input: &str, serial_output: &str) {
-    Block::default().borders(Borders::ALL).render(t, size);
     Group::default()
         .direction(Direction::Vertical)
         .margin(1)
-        .sizes(&[Size::Fixed(3), Size::Min(0)])
+        .sizes(&[Size::Fixed(3), Size::Fixed(10)])
         .render(t, size, |t, chunks| {
             Paragraph::default()
                 .block(Block::default().borders(Borders::ALL))
                 .text(user_input)
                 .render(t, &chunks[0]);
             Paragraph::default()
-                .block(Block::default().borders(Borders::ALL).title("Serial"))
                 .text(serial_output)
+                .block(Block::default().borders(Borders::ALL))
                 .render(t, &chunks[1]);
         });
 
