@@ -1,0 +1,9 @@
+[package]
+name = "serialcom"
+version = "0.1.0"
+authors = ["mborden"]
+
+[dependencies]
+serial   = "0.4"
+termion  = "1.5.1"
+tui      = "0.2.0"
