@@ -107,6 +107,11 @@ fn main() {
     draw(&mut terminal, &term_size, "{mod=invert  }", "");
     loop {
         let evt = main_rx.recv().unwrap();
+        let size = terminal.size().unwrap();
+        if term_size != size {
+            terminal.resize(size).unwrap();
+            term_size = size;
+        }
         match evt {
             Event::Input(key) => match key {
                 event::Key::Esc => {
@@ -159,11 +164,6 @@ fn main() {
             }
             Event::ClosePort => (),
         }
-        let size = terminal.size().unwrap();
-        if term_size != size {
-            terminal.resize(size).unwrap();
-            term_size = size;
-        }
         let mut input_with_cursor = user_input.clone();
         if cursor_position == input_with_cursor.len() {
             input_with_cursor.push_str("{mod=invert  }");
@@ -173,12 +173,11 @@ fn main() {
                 input_with_cursor.insert(cursor_position, n);
             }
         }
-        terminal.clear().unwrap();
         draw(
             &mut terminal,
             &term_size,
             &input_with_cursor,
-            &serial_output,
+            &serial_output.clone(),
         );
     }
     terminal.clear().unwrap();
