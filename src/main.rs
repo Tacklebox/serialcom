@@ -66,11 +66,11 @@ fn main() {
         thread::sleep(time::Duration::from_millis(1000));
         port.configure(&SETTINGS)
             .expect("Unable to configure serial port");
-        port.set_timeout(time::Duration::from_millis(200))
+        port.set_timeout(time::Duration::from_millis(20))
             .expect("Unable to configure serial port");
-        let mut serial_buffer = Vec::new();
+        let mut serial_buffer: Vec<u8>;
         loop {
-            match thread_rx.recv_timeout(time::Duration::from_millis(100)) {
+            match thread_rx.recv_timeout(time::Duration::from_millis(20)) {
                 Ok(Event::Msg(mess)) => {
                     serial_buffer = mess.clone().into_bytes();
                     serial_buffer.shrink_to_fit();
@@ -80,12 +80,14 @@ fn main() {
                 Err(_) => (),
                 Ok(Event::Input(_)) => (),
             }
-            serial_buffer.reserve(200);
+            serial_buffer = vec![0; 50];
             match port.read(&mut serial_buffer[..]) {
-                Ok(_) => {
+                Ok(bytes_read) => {
+                    serial_buffer.truncate(bytes_read);
                     recv_data_event
                         .send(Event::Msg(
-                            String::from_utf8(serial_buffer.clone()).unwrap(),
+                            String::from_utf8(serial_buffer.clone())
+                                .unwrap(),
                         ))
                         .expect("Channel Broken");
                 }
@@ -177,7 +179,7 @@ fn main() {
             &mut terminal,
             &term_size,
             &input_with_cursor,
-            &serial_output.clone(),
+            &serial_output,
         );
     }
     terminal.clear().unwrap();
