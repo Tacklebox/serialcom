@@ -86,8 +86,7 @@ fn main() {
                     serial_buffer.truncate(bytes_read);
                     recv_data_event
                         .send(Event::Msg(
-                            String::from_utf8(serial_buffer.clone())
-                                .unwrap(),
+                            String::from_utf8(serial_buffer.clone()).unwrap(),
                         ))
                         .expect("Channel Broken");
                 }
@@ -101,8 +100,8 @@ fn main() {
 
     thread::sleep(time::Duration::from_millis(1000));
 
-    let mut user_input = "".to_string();
-    let mut serial_output = "".to_string();
+    let mut user_input = String::new();
+    let mut serial_output = String::new();
     let mut cursor_position = 0;
     let mut term_size = terminal.size().unwrap();
 
@@ -144,7 +143,7 @@ fn main() {
                 event::Key::Char(the_char) => match the_char {
                     '\n' => {
                         main_tx.send(Event::Msg(user_input)).unwrap();
-                        user_input = "".to_string();
+                        user_input = String::new();
                         cursor_position = 0;
                     }
                     '\t' => (),
@@ -155,7 +154,7 @@ fn main() {
                 },
                 event::Key::Ctrl(the_char) => match the_char {
                     'l' => {
-                        serial_output = "".to_string();
+                        serial_output = String::new();
                     }
                     _ => (),
                 },
